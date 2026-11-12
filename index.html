@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>우리집 노래방</title>
+<meta name="theme-color" content="#0e1020">
+<style>
+:root{--bg:#0e1020;--card:#181b33;--card2:#20244a;--line:#2c3166;--text:#f3f4ff;--sub:#a9aed6;--pink:#ff4fa3;--cyan:#33d6ff;--gold:#ffd24a;--green:#3ddc97}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Malgun Gothic","Noto Sans KR",sans-serif;font-size:18px}
+button,input,select,textarea{font:inherit;color:inherit}
+.wrap{max-width:820px;margin:0 auto;padding:16px 14px 120px}
+header{display:flex;align-items:center;justify-content:space-between;gap:10px}
+h1{margin:0;font-size:1.6rem;letter-spacing:-.02em}
+h1 span{background:linear-gradient(90deg,var(--pink),var(--cyan));-webkit-background-clip:text;background-clip:text;color:transparent}
+.gear{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:8px 12px;cursor:pointer}
+.notice{margin-top:12px;background:#3a2a00;border:1px solid #806000;color:#ffe08a;border-radius:12px;padding:10px 12px;font-size:.9rem;line-height:1.5}
+.brand{display:flex;gap:6px;align-items:center;margin-top:12px;font-size:.9rem;color:var(--sub);flex-wrap:wrap}
+.chip{border:1px solid var(--line);background:var(--card);padding:8px 14px;border-radius:999px;cursor:pointer;white-space:nowrap}
+.chip.on{background:var(--pink);border-color:var(--pink);color:#fff;font-weight:700}
+.search{margin-top:14px}
+.search input{width:100%;padding:16px 18px;border-radius:14px;border:2px solid var(--line);background:var(--card);font-size:1.15rem;outline:none}
+.search input:focus{border-color:var(--cyan)}
+.hint{font-size:.85rem;color:var(--sub);margin:6px 4px 0}
+.cats{display:flex;gap:8px;overflow-x:auto;padding:12px 0 4px;scrollbar-width:none}
+.cats::-webkit-scrollbar{display:none}
+.sortbar{display:flex;justify-content:space-between;align-items:center;margin:8px 2px;font-size:.9rem;color:var(--sub)}
+.sortbar select{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:6px 8px}
+.song{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px;margin-top:10px}
+.top{display:flex;gap:12px;align-items:flex-start}
+.no{font-family:ui-monospace,Menlo,monospace;color:var(--cyan);font-weight:700;min-width:3.2em;padding-top:2px}
+.info{flex:1;min-width:0}
+.t{font-size:1.2rem;font-weight:700;word-break:keep-all}
+.a{color:var(--sub);font-size:.92rem;margin-top:2px}
+.tag{display:inline-block;font-size:.75rem;border:1px solid var(--line);border-radius:6px;padding:1px 6px;margin-left:4px;color:var(--sub)}
+.tag.link{color:var(--green);border-color:var(--green)}
+.star{background:none;border:none;font-size:1.6rem;cursor:pointer;color:var(--sub);padding:0 4px;line-height:1}
+.star.on{color:var(--gold)}
+.acts{display:flex;gap:8px;margin-top:12px}
+.btn{flex:1;text-align:center;padding:12px 8px;border-radius:12px;border:1px solid var(--line);background:var(--card2);cursor:pointer;text-decoration:none;color:var(--text);font-weight:600;display:block}
+.btn.play{background:linear-gradient(90deg,var(--pink),#ff7a59);border:none;color:#fff;flex:1.4}
+.btn.small{flex:0 0 auto;padding:12px 14px}
+.yt{margin-top:10px;background:#c4302b!important;border:none!important;color:#fff!important;padding:14px 10px}
+.empty{text-align:center;color:var(--sub);padding:30px 10px;line-height:1.7}
+.bar{position:fixed;left:0;right:0;bottom:0;background:rgba(14,16,32,.96);border-top:1px solid var(--line);z-index:5}
+.bar .in{max-width:820px;margin:0 auto;display:flex;gap:8px;padding:10px 14px calc(10px + env(safe-area-inset-bottom))}
+.bar .btn{padding:14px 8px}
+.next{background:var(--cyan)!important;color:#08101f!important;border:none!important;font-weight:800}
+.next.off{opacity:.4;pointer-events:none}
+.fab{background:var(--green)!important;color:#08101f!important;border:none!important;font-weight:800}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.6);display:flex;align-items:flex-end;justify-content:center;z-index:30}
+.sheet{background:var(--card);width:100%;max-width:820px;border-radius:20px 20px 0 0;padding:20px 16px calc(20px + env(safe-area-inset-bottom));max-height:88vh;overflow:auto}
+.sheet h2{margin:0 0 12px;font-size:1.3rem}
+label{display:block;font-size:.9rem;color:var(--sub);margin:12px 0 4px}
+.sheet input,.sheet select,.sheet textarea{width:100%;padding:13px 14px;border-radius:12px;border:1px solid var(--line);background:var(--bg);outline:none}
+.sheet textarea{height:90px;font-size:.75rem}
+.help{font-size:.82rem;color:var(--sub);line-height:1.6;margin-top:6px}
+.row{display:flex;gap:8px;margin-top:16px}
+.q{display:flex;align-items:center;gap:10px;padding:12px 0;border-bottom:1px solid var(--line)}
+.q .n{color:var(--pink);font-weight:800;min-width:1.6em}
+.q .x{background:none;border:1px solid var(--line);border-radius:8px;padding:6px 10px;cursor:pointer;color:var(--sub)}
+.toast{position:fixed;left:50%;bottom:96px;transform:translateX(-50%);background:#fff;color:#111;padding:12px 18px;border-radius:12px;font-weight:600;z-index:60;box-shadow:0 6px 24px rgba(0,0,0,.4);max-width:90vw;text-align:center}
+.danger{background:#5a1630!important;border-color:#8a2148!important}
+/* player */
+#player{position:fixed;inset:0;background:#000;z-index:40;display:none;flex-direction:column}
+#player.on{display:flex}
+.pbar{display:flex;gap:8px;align-items:center;padding:8px 10px;background:#111;flex-wrap:wrap}
+.pbar .ttl{flex:1;min-width:150px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pbar button,.pbar a{background:#222;border:1px solid #444;border-radius:10px;padding:10px 12px;cursor:pointer;color:#fff;text-decoration:none;font-weight:600;font-size:.95rem}
+.pbar .nx{background:var(--cyan);color:#08101f;border:none}
+#pv{flex:1;position:relative}
+#pv iframe,#ytp{position:absolute;inset:0;width:100%;height:100%;border:0}
+#pmsg{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;text-align:center;padding:20px;color:#ddd;line-height:1.6;pointer-events:none}
+#pmsg a,#pmsg button{pointer-events:auto}
+.pnext{font-size:.85rem;color:#aaa;padding:6px 10px;background:#111}
+</style></head><body>
+<div id="root"></div>
+<div id="player"><div class="pbar"><div class="ttl" id="pttl"></div><button id="pfs">⛶ 전체화면</button><button class="nx" id="pnx">▶ 다음 곡</button><a id="pyt" target="_blank" rel="noopener">유튜브에서 열기</a><button id="pclose">✕ 닫기</button></div><div class="pnext" id="pnext"></div><div id="pv"><div id="ytp"></div><div id="pmsg"></div></div></div>
+<script id="data" type="application/json">{"rev":100,"brand":"TJ","nextNo":1201,"songs":[{"id":"s1","no":1001,"t":"내 나이가 어때서","a":"오승근","c":"트로트","v":"","f":false},{"id":"s2","no":1002,"t":"사랑의 배터리","a":"홍진영","c":"트로트","v":"","vt":"MZahzWS8ypM","f":false},{"id":"s3","no":1003,"t":"남행열차","a":"김수희","c":"트로트","v":"","f":false},{"id":"s4","no":1004,"t":"무조건","a":"박상철","c":"트로트","v":"","vt":"FXgWrX7illQ","f":false},{"id":"s5","no":1005,"t":"어머나","a":"장윤정","c":"트로트","v":"","vt":"Gx5Gt9JgixA","f":false},{"id":"s6","no":1006,"t":"찐이야","a":"영탁","c":"트로트","v":"","vt":"i6irsXJB9L0","f":false},{"id":"s7","no":1007,"t":"이제 나만 믿어요","a":"임영웅","c":"트로트","v":"","vt":"Q3MPhPf-Ucg","f":false},{"id":"s8","no":1008,"t":"동백아가씨","a":"이미자","c":"트로트","v":"","vt":"KlMm4cjlnUA","f":false},{"id":"s9","no":1009,"t":"아모르 파티","a":"김연자","c":"트로트","v":"","vt":"pP8L-Vf8MhM","f":false},{"id":"s10","no":1010,"t":"테스형!","a":"나훈아","c":"트로트","v":"","vt":"M-wTPaTwIKY","f":false},{"id":"s11","no":1011,"t":"홍시","a":"나훈아","c":"트로트","v":"","vt":"pavVwhQU3JY","f":false},{"id":"s12","no":1012,"t":"돌아와요 부산항에","a":"조용필","c":"7080","v":"","f":false},{"id":"s13","no":1013,"t":"여행을 떠나요","a":"조용필","c":"7080","v":"","f":false},{"id":"s14","no":1014,"t":"킬리만자로의 표범","a":"조용필","c":"7080","v":"","f":false},{"id":"s15","no":1015,"t":"사랑으로","a":"해바라기","c":"7080","v":"","f":false},{"id":"s16","no":1016,"t":"아파트","a":"윤수일","c":"7080","v":"","f":false},{"id":"s17","no":1017,"t":"바람아 멈추어다오","a":"이지연","c":"7080","v":"","f":false},{"id":"s18","no":1018,"t":"세월이 가면","a":"최호섭","c":"7080","v":"","f":false},{"id":"s19","no":1019,"t":"서른 즈음에","a":"김광석","c":"발라드","v":"","f":false},{"id":"s20","no":1020,"t":"사랑했지만","a":"김광석","c":"발라드","v":"","f":false},{"id":"s21","no":1021,"t":"걱정말아요 그대","a":"이적","c":"발라드","v":"","f":false},{"id":"s22","no":1022,"t":"보고 싶다","a":"김범수","c":"발라드","v":"","f":false},{"id":"s23","no":1023,"t":"가시나무","a":"조성모","c":"발라드","v":"","f":false},{"id":"s24","no":1024,"t":"좋은 날","a":"아이유","c":"발라드","v":"","f":false},{"id":"s25","no":1025,"t":"My Way","a":"Frank Sinatra","c":"팝송","v":"","f":false},{"id":"s26","no":1026,"t":"Yesterday","a":"The Beatles","c":"팝송","v":"","f":false},{"id":"s27","no":1027,"t":"Let It Be","a":"The Beatles","c":"팝송","v":"","f":false},{"id":"s28","no":1028,"t":"Hotel California","a":"Eagles","c":"팝송","v":"","f":false},{"id":"s29","no":1029,"t":"Can't Help Falling in Love","a":"Elvis Presley","c":"팝송","v":"","f":false},{"id":"s30","no":1030,"t":"Take Me Home, Country Roads","a":"John Denver","c":"팝송","v":"","f":false},{"id":"s1031","no":1031,"t":"무시로","a":"나훈아","c":"트로트","v":"","f":false},{"id":"s1032","no":1032,"t":"잡초","a":"나훈아","c":"트로트","v":"","f":false},{"id":"s1033","no":1033,"t":"사랑","a":"나훈아","c":"트로트","v":"","vt":"Ce-J1UpJ0PQ","f":false},{"id":"s1034","no":1034,"t":"갈무리","a":"나훈아","c":"트로트","v":"","vt":"HdsV2Qeq3jo","f":false},{"id":"s1035","no":1035,"t":"고향역","a":"나훈아","c":"트로트","v":"","f":false},{"id":"s1036","no":1036,"t":"영영","a":"나훈아","c":"트로트","v":"","vt":"6o0MlNaJJ8w","f":false},{"id":"s1037","no":1037,"t":"울긴 왜 울어","a":"나훈아","c":"트로트","v":"","f":false},{"id":"s1038","no":1038,"t":"18세 순이","a":"나훈아","c":"트로트","v":"","f":false},{"id":"s1039","no":1039,"t":"공(空)","a":"나훈아","c":"트로트","v":"","vt":"-D4FWPwKnrk","f":false},{"id":"s1040","no":1040,"t":"물레방아 도는데","a":"나훈아","c":"트로트","v":"","f":false},{"id":"s1041","no":1041,"t":"섬마을 선생님","a":"이미자","c":"트로트","v":"","vt":"ZVZAVq0lB5w","f":false},{"id":"s1042","no":1042,"t":"기러기 아빠","a":"이미자","c":"트로트","v":"","f":false},{"id":"s1043","no":1043,"t":"여자의 일생","a":"이미자","c":"트로트","v":"","f":false},{"id":"s1044","no":1044,"t":"흑산도 아가씨","a":"이미자","c":"트로트","v":"","vt":"_xgxZU4_0yM","f":false},{"id":"s1045","no":1045,"t":"님과 함께","a":"남진","c":"트로트","v":"","f":false},{"id":"s1046","no":1046,"t":"둥지","a":"남진","c":"트로트","v":"","f":false},{"id":"s1047","no":1047,"t":"가슴 아프게","a":"남진","c":"트로트","v":"","f":false},{"id":"s1048","no":1048,"t":"빈잔","a":"남진","c":"트로트","v":"","f":false},{"id":"s1049","no":1049,"t":"비 내리는 영동교","a":"주현미","c":"트로트","v":"","vt":"mifhn3lIapc","f":false},{"id":"s1050","no":1050,"t":"짝사랑","a":"주현미","c":"트로트","v":"","f":false},{"id":"s1051","no":1051,"t":"신사동 그 사람","a":"주현미","c":"트로트","v":"","f":false},{"id":"s1052","no":1052,"t":"또 만났네요","a":"주현미","c":"트로트","v":"","f":false},{"id":"s1053","no":1053,"t":"해뜰날","a":"송대관","c":"트로트","v":"","f":false},{"id":"s1054","no":1054,"t":"네박자","a":"송대관","c":"트로트","v":"","vt":"51N9amaY4lo","f":false},{"id":"s1055","no":1055,"t":"유행가","a":"송대관","c":"트로트","v":"","f":false},{"id":"s1056","no":1056,"t":"사랑은 아무나 하나","a":"태진아","c":"트로트","v":"","f":false},{"id":"s1057","no":1057,"t":"옥경이","a":"태진아","c":"트로트","v":"","f":false},{"id":"s1058","no":1058,"t":"동반자","a":"태진아","c":"트로트","v":"","f":false},{"id":"s1059","no":1059,"t":"보라빛 엽서","a":"설운도","c":"트로트","v":"","f":false},{"id":"s1060","no":1060,"t":"잃어버린 30년","a":"설운도","c":"트로트","v":"","f":false},{"id":"s1061","no":1061,"t":"다함께 차차차","a":"설운도","c":"트로트","v":"","f":false},{"id":"s1062","no":1062,"t":"쌈바의 여인","a":"설운도","c":"트로트","v":"","f":false},{"id":"s1063","no":1063,"t":"봉선화 연정","a":"현철","c":"트로트","v":"","f":false},{"id":"s1064","no":1064,"t":"싫다 싫어","a":"현철","c":"트로트","v":"","f":false},{"id":"s1065","no":1065,"t":"사랑은 나비인가봐","a":"현철","c":"트로트","v":"","f":false},{"id":"s1066","no":1066,"t":"내 마음 별과 같이","a":"현철","c":"트로트","v":"","f":false},{"id":"s1067","no":1067,"t":"10분 내로","a":"김연자","c":"트로트","v":"","f":false},{"id":"s1068","no":1068,"t":"수은등","a":"김연자","c":"트로트","v":"","f":false},{"id":"s1069","no":1069,"t":"짠짜라","a":"장윤정","c":"트로트","v":"","f":false},{"id":"s1070","no":1070,"t":"초혼","a":"장윤정","c":"트로트","v":"","f":false},{"id":"s1071","no":1071,"t":"꽃","a":"장윤정","c":"트로트","v":"","f":false},{"id":"s1072","no":1072,"t":"곤드레 만드레","a":"박현빈","c":"트로트","v":"","f":false},{"id":"s1073","no":1073,"t":"샤방샤방","a":"박현빈","c":"트로트","v":"","f":false},{"id":"s1074","no":1074,"t":"사랑은 늘 도망가","a":"임영웅","c":"트로트","v":"","vt":"d5HrBgR0-94","f":false},{"id":"s1075","no":1075,"t":"우리들의 블루스","a":"임영웅","c":"트로트","v":"","f":false},{"id":"s1076","no":1076,"t":"모래 알갱이","a":"임영웅","c":"트로트","v":"","f":false},{"id":"s1077","no":1077,"t":"별빛 같은 나의 사랑아","a":"임영웅","c":"트로트","v":"","f":false},{"id":"s1078","no":1078,"t":"다시 만날 수 있을까","a":"임영웅","c":"트로트","v":"","f":false},{"id":"s1079","no":1079,"t":"막걸리 한잔","a":"영탁","c":"트로트","v":"","vt":"ZxDZ33G1LyY","f":false},{"id":"s1080","no":1080,"t":"니가 왜 거기서 나와","a":"영탁","c":"트로트","v":"","f":false},{"id":"s1081","no":1081,"t":"안동역에서","a":"진성","c":"트로트","v":"","vt":"L26jSx5TZns","f":false},{"id":"s1082","no":1082,"t":"보릿고개","a":"진성","c":"트로트","v":"","f":false},{"id":"s1083","no":1083,"t":"땡벌","a":"강진","c":"트로트","v":"","f":false},{"id":"s1084","no":1084,"t":"애모","a":"김수희","c":"트로트","v":"","vt":"pe6ku7VavGI","f":false},{"id":"s1085","no":1085,"t":"너무합니다","a":"김수희","c":"트로트","v":"","vt":"MDyXelq8Ro8","f":false},{"id":"s1086","no":1086,"t":"그때 그 사람","a":"심수봉","c":"트로트","v":"","f":false},{"id":"s1087","no":1087,"t":"사랑밖에 난 몰라","a":"심수봉","c":"트로트","v":"","f":false},{"id":"s1088","no":1088,"t":"남자는 배 여자는 항구","a":"심수봉","c":"트로트","v":"","f":false},{"id":"s1089","no":1089,"t":"몰래한 사랑","a":"김지애","c":"트로트","v":"","f":false},{"id":"s1090","no":1090,"t":"황진이","a":"박상철","c":"트로트","v":"","f":false},{"id":"s1091","no":1091,"t":"자옥아","a":"박상철","c":"트로트","v":"","f":false},{"id":"s1092","no":1092,"t":"남자라는 이유로","a":"조항조","c":"트로트","v":"","f":false},{"id":"s1093","no":1093,"t":"거짓말","a":"조항조","c":"트로트","v":"","f":false},{"id":"s1094","no":1094,"t":"사랑의 밧줄","a":"김용임","c":"트로트","v":"","f":false},{"id":"s1095","no":1095,"t":"산다는 건","a":"홍진영","c":"트로트","v":"","f":false},{"id":"s1096","no":1096,"t":"엄지척","a":"홍진영","c":"트로트","v":"","f":false},{"id":"s1097","no":1097,"t":"사랑의 미로","a":"최진희","c":"트로트","v":"","f":false},{"id":"s1098","no":1098,"t":"돌아가는 삼각지","a":"배호","c":"트로트","v":"","f":false},{"id":"s1099","no":1099,"t":"안개 낀 장충단 공원","a":"배호","c":"트로트","v":"","f":false},{"id":"s1100","no":1100,"t":"동숙의 노래","a":"문주란","c":"트로트","v":"","f":false},{"id":"s1101","no":1101,"t":"잘했군 잘했어","a":"하춘화","c":"트로트","v":"","f":false},{"id":"s1102","no":1102,"t":"단발머리","a":"조용필","c":"7080","v":"","vt":"v4Mvp3-PlZY","f":false},{"id":"s1103","no":1103,"t":"창밖의 여자","a":"조용필","c":"7080","v":"","vt":"EmRWHT48VbU","f":false},{"id":"s1104","no":1104,"t":"친구여","a":"조용필","c":"7080","v":"","f":false},{"id":"s1105","no":1105,"t":"꿈","a":"조용필","c":"7080","v":"","f":false},{"id":"s1106","no":1106,"t":"허공","a":"조용필","c":"7080","v":"","f":false},{"id":"s1107","no":1107,"t":"그 겨울의 찻집","a":"조용필","c":"7080","v":"","f":false},{"id":"s1108","no":1108,"t":"모나리자","a":"조용필","c":"7080","v":"","f":false},{"id":"s1109","no":1109,"t":"고추잠자리","a":"조용필","c":"7080","v":"","f":false},{"id":"s1110","no":1110,"t":"바운스","a":"조용필","c":"7080","v":"","f":false},{"id":"s1111","no":1111,"t":"한오백년","a":"조용필","c":"7080","v":"","f":false},{"id":"s1112","no":1112,"t":"광화문 연가","a":"이문세","c":"7080","v":"","f":false},{"id":"s1113","no":1113,"t":"붉은 노을","a":"이문세","c":"7080","v":"","f":false},{"id":"s1114","no":1114,"t":"옛사랑","a":"이문세","c":"7080","v":"","f":false},{"id":"s1115","no":1115,"t":"소녀","a":"이문세","c":"7080","v":"","f":false},{"id":"s1116","no":1116,"t":"J에게","a":"이선희","c":"7080","v":"","f":false},{"id":"s1117","no":1117,"t":"아름다운 강산","a":"이선희","c":"7080","v":"","f":false},{"id":"s1118","no":1118,"t":"인연","a":"이선희","c":"7080","v":"","f":false},{"id":"s1119","no":1119,"t":"당신은 모르실거야","a":"혜은이","c":"7080","v":"","f":false},{"id":"s1120","no":1120,"t":"감수광","a":"혜은이","c":"7080","v":"","f":false},{"id":"s1121","no":1121,"t":"개구장이","a":"산울림","c":"7080","v":"","f":false},{"id":"s1122","no":1122,"t":"고래사냥","a":"송창식","c":"7080","v":"","f":false},{"id":"s1123","no":1123,"t":"담배가게 아가씨","a":"송창식","c":"7080","v":"","f":false},{"id":"s1124","no":1124,"t":"행진","a":"들국화","c":"7080","v":"","f":false},{"id":"s1125","no":1125,"t":"그것만이 내 세상","a":"들국화","c":"7080","v":"","f":false},{"id":"s1126","no":1126,"t":"희망사항","a":"변진섭","c":"7080","v":"","f":false},{"id":"s1127","no":1127,"t":"리듬 속의 그 춤을","a":"김완선","c":"7080","v":"","f":false},{"id":"s1128","no":1128,"t":"어젯밤 이야기","a":"소방차","c":"7080","v":"","f":false},{"id":"s1129","no":1129,"t":"밤차","a":"이은하","c":"7080","v":"","f":false},{"id":"s1130","no":1130,"t":"열애","a":"윤시내","c":"7080","v":"","f":false},{"id":"s1131","no":1131,"t":"아침이슬","a":"양희은","c":"7080","v":"","f":false},{"id":"s1132","no":1132,"t":"상록수","a":"양희은","c":"7080","v":"","f":false},{"id":"s1133","no":1133,"t":"길가에 앉아서","a":"김세환","c":"7080","v":"","f":false},{"id":"s1134","no":1134,"t":"커피 한잔","a":"펄시스터즈","c":"7080","v":"","f":false},{"id":"s1135","no":1135,"t":"님은 먼 곳에","a":"김추자","c":"7080","v":"","f":false},{"id":"s1136","no":1136,"t":"이별","a":"패티김","c":"7080","v":"","f":false},{"id":"s1137","no":1137,"t":"서울의 찬가","a":"패티김","c":"7080","v":"","f":false},{"id":"s1138","no":1138,"t":"만남","a":"노사연","c":"7080","v":"","f":false},{"id":"s1139","no":1139,"t":"바램","a":"노사연","c":"7080","v":"","f":false},{"id":"s1140","no":1140,"t":"내 사랑 내 곁에","a":"김현식","c":"7080","v":"","f":false},{"id":"s1141","no":1141,"t":"비처럼 음악처럼","a":"김현식","c":"7080","v":"","f":false},{"id":"s1142","no":1142,"t":"잊혀진 계절","a":"이용","c":"7080","v":"","f":false},{"id":"s1143","no":1143,"t":"낭만에 대하여","a":"최백호","c":"7080","v":"","f":false},{"id":"s1144","no":1144,"t":"종이학","a":"전영록","c":"7080","v":"","f":false},{"id":"s1145","no":1145,"t":"희나리","a":"구창모","c":"7080","v":"","f":false},{"id":"s1146","no":1146,"t":"어쩌다 마주친 그대","a":"송골매","c":"7080","v":"","f":false},{"id":"s1147","no":1147,"t":"보고 싶은 얼굴","a":"민해경","c":"7080","v":"","f":false},{"id":"s1148","no":1148,"t":"사랑만은 않겠어요","a":"윤수일","c":"7080","v":"","f":false},{"id":"s1149","no":1149,"t":"백만송이 장미","a":"심수봉","c":"7080","v":"","f":false},{"id":"s1150","no":1150,"t":"잘못된 만남","a":"김건모","c":"7080","v":"","f":false},{"id":"s1151","no":1151,"t":"핑계","a":"김건모","c":"7080","v":"","f":false},{"id":"s1152","no":1152,"t":"보이지 않는 사랑","a":"신승훈","c":"7080","v":"","f":false},{"id":"s1153","no":1153,"t":"I Believe","a":"신승훈","c":"7080","v":"","f":false},{"id":"s1154","no":1154,"t":"소녀시대","a":"이승철","c":"7080","v":"","f":false},{"id":"s1155","no":1155,"t":"너를 위해","a":"임재범","c":"7080","v":"","f":false},{"id":"s1156","no":1156,"t":"고해","a":"임재범","c":"7080","v":"","f":false},{"id":"s1157","no":1157,"t":"무기여 잘 있거라","a":"박상민","c":"7080","v":"","f":false},{"id":"s1158","no":1158,"t":"사랑 Two","a":"윤도현","c":"7080","v":"","f":false},{"id":"s1159","no":1159,"t":"너에게 난, 나에게 넌","a":"자전거 탄 풍경","c":"7080","v":"","f":false},{"id":"s1160","no":1160,"t":"너의 의미","a":"산울림","c":"발라드","v":"","f":false},{"id":"s1161","no":1161,"t":"이등병의 편지","a":"김광석","c":"발라드","v":"","f":false},{"id":"s1162","no":1162,"t":"거리에서","a":"성시경","c":"발라드","v":"","f":false},{"id":"s1163","no":1163,"t":"두 사람","a":"성시경","c":"발라드","v":"","f":false},{"id":"s1164","no":1164,"t":"내 여자라니까","a":"이승기","c":"발라드","v":"","f":false},{"id":"s1165","no":1165,"t":"야생화","a":"박효신","c":"발라드","v":"","f":false},{"id":"s1166","no":1166,"t":"총 맞은 것처럼","a":"백지영","c":"발라드","v":"","f":false},{"id":"s1167","no":1167,"t":"취중진담","a":"전람회","c":"발라드","v":"","f":false},{"id":"s1168","no":1168,"t":"좋니","a":"윤종신","c":"발라드","v":"","f":false},{"id":"s1169","no":1169,"t":"모든 날, 모든 순간","a":"폴킴","c":"발라드","v":"","f":false},{"id":"s1170","no":1170,"t":"바람이 분다","a":"이소라","c":"발라드","v":"","f":false},{"id":"s1171","no":1171,"t":"나타나","a":"김범수","c":"발라드","v":"","f":false},{"id":"s1172","no":1172,"t":"안되나요","a":"휘성","c":"발라드","v":"","f":false},{"id":"s1173","no":1173,"t":"아시나요","a":"조성모","c":"발라드","v":"","f":false},{"id":"s1174","no":1174,"t":"다행이다","a":"이적","c":"발라드","v":"","f":false},{"id":"s1175","no":1175,"t":"벚꽃 엔딩","a":"버스커 버스커","c":"발라드","v":"","f":false},{"id":"s1176","no":1176,"t":"강남스타일","a":"싸이","c":"댄스","v":"","f":false},{"id":"s1177","no":1177,"t":"빙고","a":"거북이","c":"댄스","v":"","f":false},{"id":"s1178","no":1178,"t":"순정","a":"코요태","c":"댄스","v":"","f":false},{"id":"s1179","no":1179,"t":"날개 잃은 천사","a":"룰라","c":"댄스","v":"","f":false},{"id":"s1180","no":1180,"t":"애상","a":"쿨","c":"댄스","v":"","f":false},{"id":"s1181","no":1181,"t":"Dynamite","a":"방탄소년단","c":"댄스","v":"","f":false},{"id":"s1182","no":1182,"t":"APT.","a":"로제, Bruno Mars","c":"댄스","v":"","f":false},{"id":"s1183","no":1183,"t":"Dancing Queen","a":"ABBA","c":"팝송","v":"","f":false},{"id":"s1184","no":1184,"t":"Mamma Mia","a":"ABBA","c":"팝송","v":"","f":false},{"id":"s1185","no":1185,"t":"Yesterday Once More","a":"Carpenters","c":"팝송","v":"","f":false},{"id":"s1186","no":1186,"t":"Top of the World","a":"Carpenters","c":"팝송","v":"","f":false},{"id":"s1187","no":1187,"t":"Bohemian Rhapsody","a":"Queen","c":"팝송","v":"","f":false},{"id":"s1188","no":1188,"t":"I Will Always Love You","a":"Whitney Houston","c":"팝송","v":"","f":false},{"id":"s1189","no":1189,"t":"My Heart Will Go On","a":"Celine Dion","c":"팝송","v":"","f":false},{"id":"s1190","no":1190,"t":"Hello","a":"Lionel Richie","c":"팝송","v":"","f":false},{"id":"s1191","no":1191,"t":"I Just Called to Say I Love You","a":"Stevie Wonder","c":"팝송","v":"","f":false},{"id":"s1192","no":1192,"t":"Love Me Tender","a":"Elvis Presley","c":"팝송","v":"","f":false},{"id":"s1193","no":1193,"t":"Hey Jude","a":"The Beatles","c":"팝송","v":"","f":false},{"id":"s1194","no":1194,"t":"Bridge over Troubled Water","a":"Simon & Garfunkel","c":"팝송","v":"","f":false},{"id":"s1195","no":1195,"t":"What a Wonderful World","a":"Louis Armstrong","c":"팝송","v":"","f":false},{"id":"s1196","no":1196,"t":"How Deep Is Your Love","a":"Bee Gees","c":"팝송","v":"","f":false},{"id":"s1197","no":1197,"t":"Billie Jean","a":"Michael Jackson","c":"팝송","v":"","f":false},{"id":"s1198","no":1198,"t":"My Love","a":"Westlife","c":"팝송","v":"","f":false},{"id":"s1199","no":1199,"t":"Delilah","a":"Tom Jones","c":"팝송","v":"","f":false},{"id":"s1200","no":1200,"t":"Mr. Lonely","a":"Bobby Vinton","c":"팝송","v":"","f":false}]}</script>
+<script>
+(function(){
+var CATS=['트로트','발라드','7080','댄스','팝송','기타'];
+var BRAND_LABEL={TJ:'태진(TJ)',KY:'금영(KY)'};
+function ls(k,v){try{if(v===undefined)return localStorage.getItem(k);localStorage.setItem(k,v);}catch(e){return null;}}
+var base=JSON.parse(document.getElementById('data').textContent);
+var state=base;
+try{var sv=JSON.parse(ls('k2_state')||'null');if(sv&&sv.songs){var ids={};sv.songs.forEach(function(s){ids[s.id]=s;});
+  base.songs.forEach(function(b){var s=ids[b.id];if(!s){if(!sv.deleted||sv.deleted.indexOf(b.id)<0)sv.songs.push(b);}else if(b.vt&&!s.vt)s.vt=b.vt;});
+  sv.nextNo=Math.max(sv.nextNo||0,base.nextNo);state=sv;}}catch(e){}
+state.deleted=state.deleted||[];
+state.brand=ls('k2_brand')==='KY'?'KY':'TJ';
+var apiKey=ls('k2_key')||'';
+var ui={q:'',cat:'전체',sort:'no',modal:null,edit:null,confirmDel:false};
+var queue=[];try{queue=JSON.parse(ls('k2_queue')||'[]');}catch(e){}
+var root=document.getElementById('root');
+
+function esc(s){return String(s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+var CHO='ㄱㄲㄴㄷㄸㄹㅁㅂㅃㅅㅆㅇㅈㅉㅊㅋㅌㅍㅎ';
+var SPLIT={'ㄳ':'ㄱㅅ','ㄵ':'ㄴㅈ','ㄶ':'ㄴㅎ','ㄺ':'ㄹㄱ','ㄻ':'ㄹㅁ','ㄼ':'ㄹㅂ','ㄽ':'ㄹㅅ','ㄾ':'ㄹㅌ','ㄿ':'ㄹㅍ','ㅀ':'ㄹㅎ','ㅄ':'ㅂㅅ'};
+var JAMO1='ᄀᄁᄂᄃᄄᄅᄆᄇᄈᄉᄊᄋᄌᄍᄎᄏᄐᄑᄒ';
+function cho(s){var o='';for(var i=0;i<s.length;i++){var k=s.charCodeAt(i)-0xAC00;o+=(k>=0&&k<11172)?CHO[Math.floor(k/588)]:s[i];}return o;}
+function fixQ(q){q=String(q);if(q.normalize)q=q.normalize('NFC');var o='';for(var i=0;i<q.length;i++){var c=q[i];var k=JAMO1.indexOf(c);if(k>=0)c=CHO[k];o+=SPLIT[c]||c;}return o;}
+function norm(s){return String(s).toLowerCase().replace(/\s+/g,'');}
+function isCho(c){return CHO.indexOf(c)>=0;}
+function match(song,q){if(!q)return true;q=norm(fixQ(q));var hay=norm(song.t+' '+song.a+' '+song.no);if(hay.indexOf(q)>=0)return true;
+  var has=false;for(var j=0;j<q.length;j++)if(isCho(q[j])){has=true;break;}if(!has)return false;var hc=cho(hay);
+  for(var i=0;i+q.length<=hay.length;i++){var ok=true;for(var j2=0;j2<q.length;j2++){var qc=q[j2];if(isCho(qc)?hc[i+j2]!==qc:hay[i+j2]!==qc){ok=false;break;}}if(ok)return true;}return false;}
+function vid(url){url=(url||'').trim();if(/^[\w-]{11}$/.test(url))return url;var m=url.match(/(?:youtu\.be\/|[?&]v=|\/shorts\/|\/embed\/|\/live\/)([\w-]{11})/);return m?m[1]:'';}
+function byId(id){for(var i=0;i<state.songs.length;i++)if(state.songs[i].id===id)return state.songs[i];return null;}
+function knownId(s){if(s.v)return s.v;return state.brand==='KY'?s.vk:s.vt;}
+function searchQ(t,a){return state.brand==='KY'?(t+(a?' - '+a:'')+' KY 금영노래방'):('[TJ노래방] '+t+(a?' - '+a:''));}
+function ytSearchUrl(t,a){return 'https://www.youtube.com/results?search_query='+encodeURIComponent(searchQ(t,a));}
+function save(){try{localStorage.setItem('k2_state',JSON.stringify(state));}catch(e){}}
+function saveQueue(){ls('k2_queue',JSON.stringify(queue));}
+function toast(m){var d=document.createElement('div');d.className='toast';d.textContent=m;document.body.appendChild(d);setTimeout(function(){d.remove();},2400);}
+
+/* ---------- list ---------- */
+function rank(s){if(!ui.q)return 0;var q=norm(fixQ(ui.q));if(norm(s.a)===q)return 0;if(norm(s.a).indexOf(q)>=0)return 1;if(norm(s.t).indexOf(q)>=0)return 2;return 3;}
+function list(){
+  var arr=state.songs.filter(function(s){
+    if(ui.cat==='⭐ 즐겨찾기'&&!s.f)return false;
+    if(ui.cat!=='전체'&&ui.cat!=='⭐ 즐겨찾기'&&s.c!==ui.cat)return false;
+    return match(s,ui.q);});
+  arr.sort(function(x,y){
+    if(ui.sort==='t')return x.t.localeCompare(y.t,'ko');
+    if(ui.sort==='a')return x.a.localeCompare(y.a,'ko')||x.t.localeCompare(y.t,'ko');
+    return rank(x)-rank(y)||x.no-y.no;});
+  return arr;
+}
+function listHTML(){
+  var arr=list();var h='';var q=ui.q.trim();
+  if(q)h+='<button class="btn yt" data-act="freeplay">▶ "'+esc(q)+'" 바로 부르기 ('+BRAND_LABEL[state.brand]+' 영상 찾기)</button>';
+  h+='<div class="sortbar"><span>'+arr.length+'곡</span><select id="sort"><option value="no"'+(ui.sort==='no'?' selected':'')+'>번호순</option><option value="t"'+(ui.sort==='t'?' selected':'')+'>제목 가나다순</option><option value="a"'+(ui.sort==='a'?' selected':'')+'>가수별</option></select></div>';
+  if(!arr.length){h+='<div class="empty">찾는 노래가 노래책에 없어요.<br>위의 빨간 버튼으로 바로 부르거나,<br><br><button class="btn" style="display:inline-block;padding:12px 20px" data-act="add">＋ 노래책에 추가하기</button></div>';}
+  arr.forEach(function(s){
+    var k=knownId(s);
+    h+='<div class="song"><div class="top"><div class="no">'+s.no+'</div><div class="info"><div class="t">'+esc(s.t)+'</div><div class="a">'+esc(s.a)+'<span class="tag">'+esc(s.c)+'</span>'+(k?'<span class="tag link">바로 재생</span>':'')+'</div></div>';
+    h+='<button class="star'+(s.f?' on':'')+'" data-fav="'+s.id+'" aria-label="즐겨찾기">'+(s.f?'★':'☆')+'</button></div>';
+    h+='<div class="acts"><button class="btn play" data-play="'+s.id+'">▶ 부르기</button><button class="btn" data-rsv="'+s.id+'">＋ 예약</button><button class="btn small" data-edit="'+s.id+'" aria-label="수정">✎</button></div></div>';
+  });
+  return h;
+}
+function render(){
+  var h='<div class="wrap"><header><h1>🎤 <span>우리집 노래방</span></h1><button class="gear" data-act="settings">⚙ 설정</button></header>';
+  if(!apiKey)h+='<div class="notice">⚙ 설정에서 <b>API 키</b>를 넣으면 노래가 이 화면 안에서 바로 재생돼요. 키가 없으면 유튜브 앱으로 열려요.</div>';
+  h+='<div class="brand">노래방 영상: ';
+  ['TJ','KY'].forEach(function(b){h+='<button class="chip'+(state.brand===b?' on':'')+'" data-brand="'+b+'">'+BRAND_LABEL[b]+'</button>';});
+  h+='</div><div class="search"><input id="q" type="search" placeholder="🔍 노래 제목, 가수, 번호 검색" value="'+esc(ui.q)+'" autocomplete="off"></div>';
+  h+='<div class="hint">초성 검색도 돼요: 예) ㄴㅎㅇㅊ → 남행열차, ㄴㅎㅇ → 나훈아</div><div class="cats">';
+  ['전체','⭐ 즐겨찾기'].concat(CATS).forEach(function(c){h+='<button class="chip'+(ui.cat===c?' on':'')+'" data-cat="'+esc(c)+'">'+esc(c)+'</button>';});
+  h+='</div><div id="lw">'+listHTML()+'</div></div>';
+  var first=queue.length?byId(queue[0]):null;
+  h+='<div class="bar"><div class="in"><button class="btn" data-act="queue">📋 예약 '+queue.length+'곡</button>';
+  h+='<button class="btn next'+(first?'':' off')+'" data-act="next">'+(first?'▶ 다음 곡: '+esc(first.t):'예약곡 없음')+'</button>';
+  h+='<button class="btn fab small" data-act="add">＋ 곡 추가</button></div></div>';
+  if(ui.modal==='queue')h+=queueModal();
+  if(ui.modal==='form')h+=formModal();
+  if(ui.modal==='settings')h+=settingsModal();
+  root.innerHTML=h;
+}
+function refreshList(){var lw=document.getElementById('lw');if(lw)lw.innerHTML=listHTML();}
+function queueModal(){
+  var h='<div class="modal" data-act="close"><div class="sheet"><h2>📋 예약 목록</h2>';
+  if(!queue.length)h+='<div class="empty">예약된 노래가 없어요.<br>노래 옆 "＋ 예약"을 눌러 주세요.</div>';
+  queue.forEach(function(id,i){var s=byId(id);if(!s)return;
+    h+='<div class="q"><div class="n">'+(i+1)+'</div><div class="info"><div class="t" style="font-size:1.05rem">'+esc(s.t)+'</div><div class="a">'+esc(s.a)+'</div></div>'+(i>0?'<button class="x" data-up="'+i+'">▲</button>':'')+'<button class="x" data-rm="'+i+'">취소</button></div>';});
+  h+='<div class="row">'+(queue.length?'<button class="btn danger" data-act="clearq">모두 취소</button>':'')+'<button class="btn" data-act="close">닫기</button></div></div></div>';
+  return h;
+}
+function formModal(){
+  var s=ui.edit?byId(ui.edit):{t:ui.q||'',a:'',c:'트로트',v:''};
+  var h='<div class="modal" data-act="close"><div class="sheet"><h2>'+(ui.edit?'노래 수정':'노래책에 곡 추가')+'</h2>';
+  h+='<label>노래 제목 *</label><input id="f_t" value="'+esc(s.t)+'" placeholder="예) 남행열차">';
+  h+='<label>가수</label><input id="f_a" value="'+esc(s.a)+'" placeholder="예) 김수희">';
+  h+='<label>분류</label><select id="f_c">'+CATS.map(function(c){return '<option'+(s.c===c?' selected':'')+'>'+c+'</option>';}).join('')+'</select>';
+  h+='<label>유튜브 영상 링크 (선택)</label><input id="f_v" value="'+(s.v?'https://youtu.be/'+esc(s.v):'')+'" placeholder="비워두면 자동으로 찾아요">';
+  h+='<div class="help">비워두면 "부르기"를 누를 때 태진/금영 영상을 자동으로 찾아줘요. 항상 같은 영상을 틀고 싶을 때만 링크를 넣으세요.</div><div class="row">';
+  if(ui.edit)h+='<button class="btn danger" data-act="del">'+(ui.confirmDel?'정말 삭제할까요?':'삭제')+'</button>';
+  h+='<button class="btn" data-act="close">취소</button><button class="btn play" data-act="savef">저장</button></div></div></div>';
+  return h;
+}
+function settingsModal(){
+  var h='<div class="modal" data-act="close"><div class="sheet"><h2>⚙ 설정</h2>';
+  h+='<label>유튜브 API 키</label><input id="s_key" value="'+esc(apiKey)+'" placeholder="AIza로 시작하는 키를 붙여넣으세요" autocomplete="off">';
+  h+='<div class="help">바탕화면의 "노래방 API 키" 메모장에서 복사해 붙여넣고 저장하세요. 키는 이 기기에만 저장돼요. 휴대폰과 노트북에 각각 한 번씩 넣어 주세요.</div>';
+  h+='<div class="row"><button class="btn" data-act="close">닫기</button><button class="btn play" data-act="savekey">저장</button></div>';
+  h+='<label style="margin-top:24px">노래책 백업 (다른 기기로 옮기기)</label><textarea id="s_bak" readonly>'+esc(JSON.stringify({songs:state.songs,nextNo:state.nextNo,deleted:state.deleted}))+'</textarea>';
+  h+='<div class="help">위 글자를 모두 복사해서 다른 기기의 아래 칸에 붙여넣고 "불러오기"를 누르면 즐겨찾기와 추가한 곡이 옮겨져요.</div>';
+  h+='<label>백업 불러오기</label><textarea id="s_imp" placeholder="여기에 붙여넣기"></textarea><div class="row"><button class="btn" data-act="import">불러오기</button></div></div></div>';
+  return h;
+}
+function saveForm(){
+  var t=document.getElementById('f_t').value.trim();if(!t){toast('노래 제목을 입력해 주세요');return;}
+  var a=document.getElementById('f_a').value.trim(),c=document.getElementById('f_c').value,raw=document.getElementById('f_v').value.trim(),v=vid(raw);
+  if(raw&&!v){toast('유튜브 링크를 확인해 주세요');return;}
+  if(ui.edit){var s=byId(ui.edit);if(s.t!==t||s.a!==a){s.vt='';s.vk='';}s.t=t;s.a=a;s.c=c;s.v=v;toast('수정했어요');}
+  else{var no=state.nextNo||1001;state.nextNo=no+1;state.songs.push({id:'u'+Date.now(),no:no,t:t,a:a,c:c,v:v,f:false});toast(no+'번으로 추가했어요');ui.q='';}
+  ui.modal=null;ui.edit=null;save();render();
+}
+
+/* ---------- player ---------- */
+var P=document.getElementById('player'),yt=null,ytReady=false,ytWait=[],cur=null;
+function loadYT(cb){if(ytReady)return cb();ytWait.push(cb);if(window._ytl)return;window._ytl=1;
+  window.onYouTubeIframeAPIReady=function(){ytReady=true;ytWait.splice(0).forEach(function(f){f();});};
+  var s=document.createElement('script');s.src='https://www.youtube.com/iframe_api';document.head.appendChild(s);}
+function pmsg(html){var m=document.getElementById('pmsg');m.innerHTML=html||'';}
+function updNext(){var n=queue.length?byId(queue[0]):null;document.getElementById('pnext').textContent=n?'다음 예약곡: '+n.t+' - '+n.a+' (총 '+queue.length+'곡)':'예약곡 없음';
+  document.getElementById('pnx').style.display=n?'':'none';}
+function openPlayer(title){P.classList.add('on');document.getElementById('pttl').textContent='🎤 '+title;updNext();}
+function closePlayer(){P.classList.remove('on');if(yt&&yt.stopVideo)try{yt.stopVideo();}catch(e){}cur=null;pmsg('');if(document.fullscreenElement)document.exitFullscreen().catch(function(){});render();}
+function playId(id){
+  document.getElementById('pyt').href='https://www.youtube.com/watch?v='+id;pmsg('');
+  loadYT(function(){
+    if(!yt){yt=new YT.Player('ytp',{videoId:id,playerVars:{autoplay:1,playsinline:1,rel:0},events:{onStateChange:onState,onError:onErr}});}
+    else yt.loadVideoById(id);
+  });
+}
+function onState(e){if(e.data===0){ if(queue.length){pmsg('<div style="font-size:1.4rem">다음 곡으로 넘어가요…</div>');setTimeout(playNext,2500);} else pmsg('<div style="font-size:1.3rem">노래가 끝났어요 👏</div><button class="btn" style="max-width:240px" onclick="document.getElementById(\'pclose\').click()">노래책으로 돌아가기</button>'); }}
+function onErr(e){
+  if(cur&&cur.song){var s=cur.song;if(knownId(s)===cur.id&&!s.v){if(state.brand==='KY')s.vk='';else s.vt='';save();}}
+  if(cur&&cur.cands&&cur.cands.length){var n=cur.cands.shift();cur.id=n;pmsg('<div>이 영상은 여기서 재생이 막혀 있어서 다른 영상을 찾고 있어요…</div>');playId(n);return;}
+  pmsg('<div>이 노래방 영상은 회사에서 다른 곳 재생을 막아 두었어요.</div><a class="btn" style="max-width:260px;background:#c4302b;border:none" target="_blank" rel="noopener" href="'+(cur?ytSearchUrl(cur.t,cur.a):'#')+'">유튜브에서 열기</a>');
+}
+function searchApi(t,a){
+  var url='https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&videoEmbeddable=true&maxResults=8&q='+encodeURIComponent(searchQ(t,a))+'&key='+encodeURIComponent(apiKey);
+  return fetch(url).then(function(r){return r.json().then(function(j){if(!r.ok){var rs=(j.error&&j.error.errors&&j.error.errors[0]&&j.error.errors[0].reason)||'';throw new Error(rs||('http'+r.status));}return j;});})
+  .then(function(j){var it=j.items||[];var re=state.brand==='KY'?/KY|금영|keumyoung/i:/TJ/i;
+    var good=it.filter(function(x){return re.test(x.snippet.channelTitle)||re.test(x.snippet.title);});var rest=it.filter(function(x){return good.indexOf(x)<0;});
+    return good.concat(rest).map(function(x){return x.id.videoId;});});
+}
+function play(song,freeQ){
+  var t=song?song.t:freeQ,a=song?song.a:'';
+  var k=song?knownId(song):'';
+  if(!apiKey&&!k){window.open(ytSearchUrl(t,a),'_blank');return;}
+  cur={song:song,t:t,a:a,id:k,cands:[]};
+  openPlayer(t+(a?' - '+a:''));
+  if(k){playId(k);return;}
+  pmsg('<div style="font-size:1.2rem">'+BRAND_LABEL[state.brand]+' 영상을 찾고 있어요…</div>');
+  var mine=cur;
+  searchApi(t,a).then(function(ids){
+    if(cur!==mine)return;
+    if(!ids.length){pmsg('<div>'+BRAND_LABEL[state.brand]+' 영상을 찾지 못했어요.</div><a class="btn" style="max-width:260px;background:#c4302b;border:none" target="_blank" rel="noopener" href="'+ytSearchUrl(t,a)+'">유튜브에서 찾아보기</a>');return;}
+    cur.id=ids[0];cur.cands=ids.slice(1,4);
+    if(song&&!song.v){if(state.brand==='KY')song.vk=ids[0];else song.vt=ids[0];save();}
+    playId(ids[0]);
+  }).catch(function(err){
+    if(cur!==mine)return;var r=String(err.message||err);
+    var why=/quota/i.test(r)?'오늘 검색 가능 횟수를 다 썼어요. 내일 다시 자동 검색이 돼요.':/keyInvalid|API key|badRequest|forbidden|ipRefererBlocked|accessNotConfigured/i.test(r)?'API 키가 맞지 않거나 이 주소에서 쓸 수 없게 되어 있어요. ⚙ 설정을 확인해 주세요.':'인터넷 연결을 확인해 주세요.';
+    pmsg('<div>'+why+'</div><a class="btn" style="max-width:260px;background:#c4302b;border:none" target="_blank" rel="noopener" href="'+ytSearchUrl(t,a)+'">유튜브에서 열기</a>');
+  });
+}
+function playNext(){if(!queue.length)return;var id=queue.shift();saveQueue();var s=byId(id);updNext();if(s)play(s);}
+document.getElementById('pclose').onclick=closePlayer;
+document.getElementById('pnx').onclick=playNext;
+document.getElementById('pfs').onclick=function(){if(document.fullscreenElement)document.exitFullscreen().catch(function(){});else if(P.requestFullscreen)P.requestFullscreen().catch(function(){});};
+
+/* ---------- events ---------- */
+root.addEventListener('click',function(e){
+  var el=e.target.closest('[data-brand],[data-cat],[data-fav],[data-rsv],[data-edit],[data-act],[data-rm],[data-up],[data-play]');
+  if(!el)return;var d=el.dataset;
+  if(d.act==='close'&&el.classList.contains('modal')&&e.target!==el)return;
+  if(d.play){var s=byId(d.play);if(s)play(s);return;}
+  if(d.brand){state.brand=d.brand;ls('k2_brand',d.brand);render();return;}
+  if(d.cat){ui.cat=d.cat;render();return;}
+  if(d.fav){var s2=byId(d.fav);s2.f=!s2.f;save();el.classList.toggle('on',s2.f);el.textContent=s2.f?'★':'☆';return;}
+  if(d.rsv){queue.push(d.rsv);saveQueue();toast('예약했어요 ('+queue.length+'번째)');render();return;}
+  if(d.edit){ui.edit=d.edit;ui.modal='form';ui.confirmDel=false;render();return;}
+  if(d.rm!==undefined){queue.splice(+d.rm,1);saveQueue();render();return;}
+  if(d.up!==undefined){var i=+d.up,x=queue[i];queue[i]=queue[i-1];queue[i-1]=x;saveQueue();render();return;}
+  switch(d.act){
+    case 'freeplay':play(null,ui.q.trim());break;
+    case 'queue':ui.modal='queue';render();break;
+    case 'settings':ui.modal='settings';render();break;
+    case 'add':ui.edit=null;ui.modal='form';render();break;
+    case 'close':ui.modal=null;ui.edit=null;render();break;
+    case 'clearq':queue=[];saveQueue();render();break;
+    case 'savef':saveForm();break;
+    case 'savekey':apiKey=document.getElementById('s_key').value.trim();ls('k2_key',apiKey);ui.modal=null;toast(apiKey?'API 키를 저장했어요':'API 키를 지웠어요');render();break;
+    case 'import':try{var j=JSON.parse(document.getElementById('s_imp').value);if(!j.songs)throw 0;state.songs=j.songs;state.nextNo=j.nextNo||state.nextNo;state.deleted=j.deleted||[];save();ui.modal=null;toast('노래책을 불러왔어요');render();}catch(err){toast('백업 글자가 올바르지 않아요');}break;
+    case 'del':if(!ui.confirmDel){ui.confirmDel=true;render();break;}
+      state.songs=state.songs.filter(function(s){return s.id!==ui.edit;});state.deleted.push(ui.edit);
+      queue=queue.filter(function(id){return id!==ui.edit;});saveQueue();ui.modal=null;ui.edit=null;toast('삭제했어요');save();render();break;
+    case 'next':playNext();break;
+  }
+});
+var qt=null;
+function refreshQ(){var el=document.getElementById('q');if(!el)return;ui.q=el.value;refreshList();}
+['input','keyup','compositionend','change','search'].forEach(function(ev){root.addEventListener(ev,function(e){if(e.target.id==='q'){clearTimeout(qt);qt=setTimeout(refreshQ,120);}});});
+root.addEventListener('keydown',function(e){if(e.target.id==='q'&&e.key==='Enter'){e.target.blur();refreshQ();}});
+root.addEventListener('change',function(e){if(e.target.id==='sort'){ui.sort=e.target.value;refreshList();}});
+render();
+})();
+</script></body></html>
