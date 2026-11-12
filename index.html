@@ -69,6 +69,9 @@ label{display:block;font-size:.9rem;color:var(--sub);margin:12px 0 4px}
 #pv iframe,#ytp{position:absolute;inset:0;width:100%;height:100%;border:0}
 #pmsg{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;text-align:center;padding:20px;color:#ddd;line-height:1.6;pointer-events:none}
 #pmsg a,#pmsg button{pointer-events:auto}
+#pmsg .btn{flex:none;width:auto;padding:14px 26px;display:inline-block}
+#pmsg.cover{background:#000}
+.btn.inapp{background:#1d3b5c;border-color:#2f5f8f}
 .pnext{font-size:.85rem;color:#aaa;padding:6px 10px;background:#111}
 </style></head><body>
 <div id="root"></div>
@@ -126,20 +129,20 @@ function list(){
 }
 function listHTML(){
   var arr=list();var h='';var q=ui.q.trim();
-  if(q)h+='<button class="btn yt" data-act="freeplay">▶ "'+esc(q)+'" 바로 부르기 ('+BRAND_LABEL[state.brand]+' 영상 찾기)</button>';
+  if(q)h+='<button class="btn yt" data-act="freeplay">▶ "'+esc(q)+'" 바로 부르기 ('+BRAND_LABEL[state.brand]+' 영상, 유튜브로)</button><button class="btn inapp" style="margin-top:8px;padding:12px" data-act="freeapp">📺 "'+esc(q)+'" 앱 안에서 부르기 (일반 반주 영상)</button>';
   h+='<div class="sortbar"><span>'+arr.length+'곡</span><select id="sort"><option value="no"'+(ui.sort==='no'?' selected':'')+'>번호순</option><option value="t"'+(ui.sort==='t'?' selected':'')+'>제목 가나다순</option><option value="a"'+(ui.sort==='a'?' selected':'')+'>가수별</option></select></div>';
   if(!arr.length){h+='<div class="empty">찾는 노래가 노래책에 없어요.<br>위의 빨간 버튼으로 바로 부르거나,<br><br><button class="btn" style="display:inline-block;padding:12px 20px" data-act="add">＋ 노래책에 추가하기</button></div>';}
   arr.forEach(function(s){
     var k=knownId(s);
     h+='<div class="song"><div class="top"><div class="no">'+s.no+'</div><div class="info"><div class="t">'+esc(s.t)+'</div><div class="a">'+esc(s.a)+'<span class="tag">'+esc(s.c)+'</span>'+(k?'<span class="tag link">바로 재생</span>':'')+'</div></div>';
     h+='<button class="star'+(s.f?' on':'')+'" data-fav="'+s.id+'" aria-label="즐겨찾기">'+(s.f?'★':'☆')+'</button></div>';
-    h+='<div class="acts"><button class="btn play" data-play="'+s.id+'">▶ 부르기</button><button class="btn" data-rsv="'+s.id+'">＋ 예약</button><button class="btn small" data-edit="'+s.id+'" aria-label="수정">✎</button></div></div>';
+    h+='<div class="acts"><button class="btn play" data-play="'+s.id+'">▶ 부르기</button><button class="btn inapp" data-app="'+s.id+'">📺 앱에서</button><button class="btn" data-rsv="'+s.id+'">＋ 예약</button><button class="btn small" data-edit="'+s.id+'" aria-label="수정">✎</button></div></div>';
   });
   return h;
 }
 function render(){
   var h='<div class="wrap"><header><h1>🎤 <span>우리집 노래방</span></h1><button class="gear" data-act="settings">⚙ 설정</button></header>';
-  if(!apiKey)h+='<div class="notice">⚙ 설정에서 <b>API 키</b>를 넣으면 노래가 이 화면 안에서 바로 재생돼요. 키가 없으면 유튜브 앱으로 열려요.</div>';
+  if(!apiKey)h+='<div class="notice">⚙ 설정에서 <b>API 키</b>를 넣으면 "부르기"를 누를 때 태진/금영 영상이 검색 없이 바로 열리고, "📺 앱에서"도 쓸 수 있어요.</div>';
   h+='<div class="brand">노래방 영상: ';
   ['TJ','KY'].forEach(function(b){h+='<button class="chip'+(state.brand===b?' on':'')+'" data-brand="'+b+'">'+BRAND_LABEL[b]+'</button>';});
   h+='</div><div class="search"><input id="q" type="search" placeholder="🔍 노래 제목, 가수, 번호 검색" value="'+esc(ui.q)+'" autocomplete="off"></div>';
@@ -190,7 +193,7 @@ function saveForm(){
   var t=document.getElementById('f_t').value.trim();if(!t){toast('노래 제목을 입력해 주세요');return;}
   var a=document.getElementById('f_a').value.trim(),c=document.getElementById('f_c').value,raw=document.getElementById('f_v').value.trim(),v=vid(raw);
   if(raw&&!v){toast('유튜브 링크를 확인해 주세요');return;}
-  if(ui.edit){var s=byId(ui.edit);if(s.t!==t||s.a!==a){s.vt='';s.vk='';}s.t=t;s.a=a;s.c=c;s.v=v;toast('수정했어요');}
+  if(ui.edit){var s=byId(ui.edit);if(s.t!==t||s.a!==a){s.vt='';s.vk='';s.ve='';}s.t=t;s.a=a;s.c=c;s.v=v;toast('수정했어요');}
   else{var no=state.nextNo||1001;state.nextNo=no+1;state.songs.push({id:'u'+Date.now(),no:no,t:t,a:a,c:c,v:v,f:false});toast(no+'번으로 추가했어요');ui.q='';}
   ui.modal=null;ui.edit=null;save();render();
 }
@@ -200,63 +203,79 @@ var P=document.getElementById('player'),yt=null,ytReady=false,ytWait=[],cur=null
 function loadYT(cb){if(ytReady)return cb();ytWait.push(cb);if(window._ytl)return;window._ytl=1;
   window.onYouTubeIframeAPIReady=function(){ytReady=true;ytWait.splice(0).forEach(function(f){f();});};
   var s=document.createElement('script');s.src='https://www.youtube.com/iframe_api';document.head.appendChild(s);}
-function pmsg(html){var m=document.getElementById('pmsg');m.innerHTML=html||'';}
+function pmsg(html,cover){var m=document.getElementById('pmsg');m.innerHTML=html||'';m.classList.toggle('cover',!!cover);}
 function updNext(){var n=queue.length?byId(queue[0]):null;document.getElementById('pnext').textContent=n?'다음 예약곡: '+n.t+' - '+n.a+' (총 '+queue.length+'곡)':'예약곡 없음';
   document.getElementById('pnx').style.display=n?'':'none';}
 function openPlayer(title){P.classList.add('on');document.getElementById('pttl').textContent='🎤 '+title;updNext();}
 function closePlayer(){P.classList.remove('on');if(yt&&yt.stopVideo)try{yt.stopVideo();}catch(e){}cur=null;pmsg('');if(document.fullscreenElement)document.exitFullscreen().catch(function(){});render();}
 function playId(id){
-  document.getElementById('pyt').href='https://www.youtube.com/watch?v='+id;pmsg('');
+  document.getElementById('pyt').href='https://www.youtube.com/watch?v='+id;pmsg('',false);
   loadYT(function(){
     if(!yt){yt=new YT.Player('ytp',{videoId:id,playerVars:{autoplay:1,playsinline:1,rel:0},events:{onStateChange:onState,onError:onErr}});}
     else yt.loadVideoById(id);
   });
 }
-function onState(e){if(e.data===0){ if(queue.length){pmsg('<div style="font-size:1.4rem">다음 곡으로 넘어가요…</div>');setTimeout(playNext,2500);} else pmsg('<div style="font-size:1.3rem">노래가 끝났어요 👏</div><button class="btn" style="max-width:240px" onclick="document.getElementById(\'pclose\').click()">노래책으로 돌아가기</button>'); }}
+function onState(e){if(e.data===0){ if(queue.length){pmsg('<div style="font-size:1.4rem">다음 곡으로 넘어가요…</div>');setTimeout(playNext,2500);} else pmsg('<div style="font-size:1.3rem">노래가 끝났어요 👏</div><button class="btn" onclick="document.getElementById(\'pclose\').click()">노래책으로 돌아가기</button>',true); }}
 function onErr(e){
-  if(cur&&cur.song){var s=cur.song;if(knownId(s)===cur.id&&!s.v){if(state.brand==='KY')s.vk='';else s.vt='';save();}}
-  if(cur&&cur.cands&&cur.cands.length){var n=cur.cands.shift();cur.id=n;pmsg('<div>이 영상은 여기서 재생이 막혀 있어서 다른 영상을 찾고 있어요…</div>');playId(n);return;}
-  pmsg('<div>이 노래방 영상은 회사에서 다른 곳 재생을 막아 두었어요.</div><a class="btn" style="max-width:260px;background:#c4302b;border:none" target="_blank" rel="noopener" href="'+(cur?ytSearchUrl(cur.t,cur.a):'#')+'">유튜브에서 열기</a>');
+  if(cur&&cur.song&&cur.song.ve===cur.id){cur.song.ve='';save();}
+  if(cur&&cur.cands&&cur.cands.length){var n=cur.cands.shift();cur.id=n;if(cur.song){cur.song.ve=n;save();}pmsg('<div>이 영상은 재생이 막혀 있어서 다른 영상을 찾고 있어요…</div>',true);playId(n);return;}
+  pmsg('<div>앱 안에서 재생할 수 있는 영상이 없어요.</div><a class="btn yt" target="_blank" rel="noopener" href="'+(cur?ytSearchUrl(cur.t,cur.a):'#')+'">유튜브에서 '+BRAND_LABEL[state.brand]+' 영상 보기</a>',true);
 }
-function searchApi(t,a){
-  var url='https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&videoEmbeddable=true&maxResults=8&q='+encodeURIComponent(searchQ(t,a))+'&key='+encodeURIComponent(apiKey);
-  return fetch(url).then(function(r){return r.json().then(function(j){if(!r.ok){var rs=(j.error&&j.error.errors&&j.error.errors[0]&&j.error.errors[0].reason)||'';throw new Error(rs||('http'+r.status));}return j;});})
-  .then(function(j){var it=j.items||[];var re=state.brand==='KY'?/KY|금영|keumyoung/i:/TJ/i;
-    var good=it.filter(function(x){return re.test(x.snippet.channelTitle)||re.test(x.snippet.title);});var rest=it.filter(function(x){return good.indexOf(x)<0;});
-    return good.concat(rest).map(function(x){return x.id.videoId;});});
+function apiCall(q,embed){
+  var url='https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&maxResults=8'+(embed?'&videoEmbeddable=true':'')+'&q='+encodeURIComponent(q)+'&key='+encodeURIComponent(apiKey);
+  return fetch(url).then(function(r){return r.json().then(function(j){if(!r.ok){var rs=(j.error&&j.error.errors&&j.error.errors[0]&&j.error.errors[0].reason)||'';throw new Error(rs||('http'+r.status));}return j.items||[];});});
 }
+var BLOCKED=/TJ|KY|금영|keumyoung|ziller|태진/i;
+function brandIds(t,a){var re=state.brand==='KY'?/KY|금영|keumyoung/i:/TJ|ziller|태진/i;
+  return apiCall(searchQ(t,a),false).then(function(it){var good=it.filter(function(x){return re.test(x.snippet.channelTitle)||re.test(x.snippet.title);});return (good.length?good:it).map(function(x){return x.id.videoId;});});}
+function embedIds(t,a){
+  return apiCall(t+(a?' '+a:'')+' 노래방',true).then(function(it){return it.filter(function(x){return !BLOCKED.test(x.snippet.channelTitle);}).map(function(x){return x.id.videoId;});});}
+function whyErr(err){var r=String(err&&err.message||err);
+  return /quota/i.test(r)?'오늘 자동 검색 횟수를 다 썼어요. 내일 다시 돼요.':/keyInvalid|API key|badRequest|forbidden|ipRefererBlocked|accessNotConfigured|http4/i.test(r)?'API 키가 맞지 않아요. ⚙ 설정을 확인해 주세요.':'인터넷 연결을 확인해 주세요.';}
+/* A: 태진/금영 영상을 찾아 유튜브로 바로 열기 */
 function play(song,freeQ){
   var t=song?song.t:freeQ,a=song?song.a:'';
   var k=song?knownId(song):'';
-  if(!apiKey&&!k){window.open(ytSearchUrl(t,a),'_blank');return;}
-  cur={song:song,t:t,a:a,id:k,cands:[]};
-  openPlayer(t+(a?' - '+a:''));
-  if(k){playId(k);return;}
-  pmsg('<div style="font-size:1.2rem">'+BRAND_LABEL[state.brand]+' 영상을 찾고 있어요…</div>');
-  var mine=cur;
-  searchApi(t,a).then(function(ids){
-    if(cur!==mine)return;
-    if(!ids.length){pmsg('<div>'+BRAND_LABEL[state.brand]+' 영상을 찾지 못했어요.</div><a class="btn" style="max-width:260px;background:#c4302b;border:none" target="_blank" rel="noopener" href="'+ytSearchUrl(t,a)+'">유튜브에서 찾아보기</a>');return;}
-    cur.id=ids[0];cur.cands=ids.slice(1,4);
-    if(song&&!song.v){if(state.brand==='KY')song.vk=ids[0];else song.vt=ids[0];save();}
-    playId(ids[0]);
-  }).catch(function(err){
-    if(cur!==mine)return;var r=String(err.message||err);
-    var why=/quota/i.test(r)?'오늘 검색 가능 횟수를 다 썼어요. 내일 다시 자동 검색이 돼요.':/keyInvalid|API key|badRequest|forbidden|ipRefererBlocked|accessNotConfigured/i.test(r)?'API 키가 맞지 않거나 이 주소에서 쓸 수 없게 되어 있어요. ⚙ 설정을 확인해 주세요.':'인터넷 연결을 확인해 주세요.';
-    pmsg('<div>'+why+'</div><a class="btn" style="max-width:260px;background:#c4302b;border:none" target="_blank" rel="noopener" href="'+ytSearchUrl(t,a)+'">유튜브에서 열기</a>');
-  });
+  if(k){window.open('https://www.youtube.com/watch?v='+k,'_blank');return;}
+  if(!apiKey){window.open(ytSearchUrl(t,a),'_blank');return;}
+  var w=window.open('about:blank','_blank');
+  try{w.document.write('<body style="background:#0e1020;color:#fff;font:20px sans-serif;display:flex;align-items:center;justify-content:center;height:90vh">🎤 '+BRAND_LABEL[state.brand]+' 영상을 찾고 있어요…</body>');}catch(e){}
+  function go(u){if(w&&!w.closed)w.location.href=u;else location.href=u;}
+  brandIds(t,a).then(function(ids){
+    if(!ids.length){go(ytSearchUrl(t,a));return;}
+    if(song&&!song.v){if(state.brand==='KY')song.vk=ids[0];else song.vt=ids[0];save();refreshList();}
+    go('https://www.youtube.com/watch?v='+ids[0]);
+  }).catch(function(err){toast(whyErr(err));go(ytSearchUrl(t,a));});
 }
-function playNext(){if(!queue.length)return;var id=queue.shift();saveQueue();var s=byId(id);updNext();if(s)play(s);}
+/* B: 앱 안에서 재생 (일반 반주 영상) */
+function playApp(song,freeQ){
+  var t=song?song.t:freeQ,a=song?song.a:'';
+  if(!apiKey){toast('⚙ 설정에서 API 키를 먼저 넣어 주세요');ui.modal='settings';render();return;}
+  cur={song:song,t:t,a:a,id:song&&song.ve||'',cands:[]};
+  openPlayer(t+(a?' - '+a:''));
+  if(cur.id){playId(cur.id);return;}
+  pmsg('<div style="font-size:1.2rem">앱 안에서 재생할 반주 영상을 찾고 있어요…</div>',true);
+  var mine=cur;
+  embedIds(t,a).then(function(ids){
+    if(cur!==mine)return;
+    if(!ids.length){pmsg('<div>앱 안에서 재생할 수 있는 영상을 찾지 못했어요.</div><a class="btn yt" target="_blank" rel="noopener" href="'+ytSearchUrl(t,a)+'">유튜브에서 '+BRAND_LABEL[state.brand]+' 영상 보기</a>',true);return;}
+    cur.id=ids[0];cur.cands=ids.slice(1,5);
+    if(song){song.ve=ids[0];save();}
+    playId(ids[0]);
+  }).catch(function(err){if(cur!==mine)return;pmsg('<div>'+whyErr(err)+'</div><a class="btn yt" target="_blank" rel="noopener" href="'+ytSearchUrl(t,a)+'">유튜브에서 열기</a>',true);});
+}
+function playNext(){if(!queue.length)return;var id=queue.shift();saveQueue();var s=byId(id);updNext();if(!s)return;if(P.classList.contains('on'))playApp(s);else{play(s);render();}}
 document.getElementById('pclose').onclick=closePlayer;
 document.getElementById('pnx').onclick=playNext;
 document.getElementById('pfs').onclick=function(){if(document.fullscreenElement)document.exitFullscreen().catch(function(){});else if(P.requestFullscreen)P.requestFullscreen().catch(function(){});};
 
 /* ---------- events ---------- */
 root.addEventListener('click',function(e){
-  var el=e.target.closest('[data-brand],[data-cat],[data-fav],[data-rsv],[data-edit],[data-act],[data-rm],[data-up],[data-play]');
+  var el=e.target.closest('[data-brand],[data-cat],[data-fav],[data-rsv],[data-edit],[data-act],[data-rm],[data-up],[data-play],[data-app]');
   if(!el)return;var d=el.dataset;
   if(d.act==='close'&&el.classList.contains('modal')&&e.target!==el)return;
   if(d.play){var s=byId(d.play);if(s)play(s);return;}
+  if(d.app){var sa=byId(d.app);if(sa)playApp(sa);return;}
   if(d.brand){state.brand=d.brand;ls('k2_brand',d.brand);render();return;}
   if(d.cat){ui.cat=d.cat;render();return;}
   if(d.fav){var s2=byId(d.fav);s2.f=!s2.f;save();el.classList.toggle('on',s2.f);el.textContent=s2.f?'★':'☆';return;}
@@ -266,6 +285,7 @@ root.addEventListener('click',function(e){
   if(d.up!==undefined){var i=+d.up,x=queue[i];queue[i]=queue[i-1];queue[i-1]=x;saveQueue();render();return;}
   switch(d.act){
     case 'freeplay':play(null,ui.q.trim());break;
+    case 'freeapp':playApp(null,ui.q.trim());break;
     case 'queue':ui.modal='queue';render();break;
     case 'settings':ui.modal='settings';render();break;
     case 'add':ui.edit=null;ui.modal='form';render();break;
