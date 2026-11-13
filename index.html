@@ -209,7 +209,7 @@ function saveForm(){
   var t=document.getElementById('f_t').value.trim();if(!t){toast('노래 제목을 입력해 주세요');return;}
   var a=document.getElementById('f_a').value.trim(),c=document.getElementById('f_c').value,raw=document.getElementById('f_v').value.trim(),v=vid(raw);
   if(raw&&!v){toast('유튜브 링크를 확인해 주세요');return;}
-  if(ui.edit){var s=byId(ui.edit);if(s.t!==t||s.a!==a){s.vt='';s.vk='';s.ve='';}s.t=t;s.a=a;s.c=c;s.v=v;toast('수정했어요');}
+  if(ui.edit){var s=byId(ui.edit);if(s.t!==t||s.a!==a){s.vt='';s.vk='';s.ve2='';}s.t=t;s.a=a;s.c=c;s.v=v;toast('수정했어요');}
   else{var no=state.nextNo||1001;state.nextNo=no+1;state.songs.push({id:'u'+Date.now(),no:no,t:t,a:a,c:c,v:v,f:false});toast(no+'번으로 추가했어요');ui.q='';}
   ui.modal=null;ui.edit=null;save();render();
 }
@@ -233,19 +233,26 @@ function playId(id){
 }
 function onState(e){if(e.data===0){stopRec(); if(queue.length){pmsg('<div style="font-size:1.4rem">다음 곡으로 넘어가요…</div>');setTimeout(playNext,2500);} else pmsg('<div style="font-size:1.3rem">노래가 끝났어요 👏</div><button class="btn" onclick="document.getElementById(\'pclose\').click()">노래책으로 돌아가기</button>',true); }}
 function onErr(e){
-  if(cur&&cur.song&&cur.song.ve===cur.id){cur.song.ve='';save();}
-  if(cur&&cur.cands&&cur.cands.length){var n=cur.cands.shift();cur.id=n;if(cur.song){cur.song.ve=n;save();}pmsg('<div>이 영상은 재생이 막혀 있어서 다른 영상을 찾고 있어요…</div>',true);playId(n);return;}
+  if(cur&&cur.song&&cur.song.ve2===cur.id){cur.song.ve2='';save();}
+  if(cur&&cur.cands&&cur.cands.length){var n=cur.cands.shift();cur.id=n;if(cur.song){cur.song.ve2=n;save();}pmsg('<div>이 영상은 재생이 막혀 있어서 다른 영상을 찾고 있어요…</div>',true);playId(n);return;}
   pmsg('<div>앱 안에서 재생할 수 있는 영상이 없어요.</div><a class="btn yt" target="_blank" rel="noopener" href="'+(cur?ytSearchUrl(cur.t,cur.a):'#')+'">유튜브에서 '+BRAND_LABEL[state.brand]+' 영상 보기</a>',true);
 }
-function apiCall(q,embed){
-  var url='https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&maxResults=8'+(embed?'&videoEmbeddable=true':'')+'&q='+encodeURIComponent(q)+'&key='+encodeURIComponent(apiKey);
+function apiCall(q,embed,max){
+  var url='https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&maxResults='+(max||8)+(embed?'&videoEmbeddable=true':'')+'&q='+encodeURIComponent(q)+'&key='+encodeURIComponent(apiKey);
   return fetch(url).then(function(r){return r.json().then(function(j){if(!r.ok){var rs=(j.error&&j.error.errors&&j.error.errors[0]&&j.error.errors[0].reason)||'';throw new Error(rs||('http'+r.status));}return j.items||[];});});
 }
 var BLOCKED=/TJ|KY|금영|keumyoung|ziller|태진/i;
 function brandIds(t,a){var re=state.brand==='KY'?/KY|금영|keumyoung/i:/TJ|ziller|태진/i;
   return apiCall(searchQ(t,a),false).then(function(it){var good=it.filter(function(x){return re.test(x.snippet.channelTitle)||re.test(x.snippet.title);});return (good.length?good:it).map(function(x){return x.id.videoId;});});}
+var KARA=/노래방|karaoke|가라오케/i,MRW=/\bMR\b|반주|instrumental|\binst\b|인스트/i,NOTK=/cover|커버|live|라이브|직캠|무대|fancam|reaction|리액션|뮤직비디오|m\/v|\bmv\b|official (music )?video|full ver|풀버전|audio/i;
 function embedIds(t,a){
-  return apiCall(t+(a?' '+a:'')+' 노래방',true).then(function(it){return it.filter(function(x){return !BLOCKED.test(x.snippet.channelTitle);}).map(function(x){return x.id.videoId;});});}
+  var nt=norm(t);
+  return apiCall(t+(a?' '+a:'')+' 노래방 MR',true,25).then(function(it){
+    var list=it.filter(function(x){return !BLOCKED.test(x.snippet.channelTitle);}).map(function(x){var ti=x.snippet.title.replace(/&amp;/g,'&').replace(/&#39;/g,"'").replace(/&quot;/g,'"');
+      var k=KARA.test(ti),m=MRW.test(ti),bad=NOTK.test(ti)&&!k;var hasT=norm(ti).indexOf(nt)>=0;
+      var sc=(k?3:0)+(m?2:0)+(hasT?2:0)-(bad?5:0);return {id:x.id.videoId,sc:sc,ok:(k||m)&&!bad};});
+    list=list.filter(function(x){return x.ok;}).sort(function(p,q){return q.sc-p.sc;});
+    return list.map(function(x){return x.id;});});}
 function whyErr(err){var r=String(err&&err.message||err);
   return /quota/i.test(r)?'오늘 자동 검색 횟수를 다 썼어요. 내일 다시 돼요.':/keyInvalid|API key|badRequest|forbidden|ipRefererBlocked|accessNotConfigured|http4/i.test(r)?'API 키가 맞지 않아요. ⚙ 설정을 확인해 주세요.':'인터넷 연결을 확인해 주세요.';}
 /* A: 태진/금영 영상을 찾아 유튜브로 바로 열기 */
@@ -267,16 +274,16 @@ function play(song,freeQ){
 function playApp(song,freeQ){
   var t=song?song.t:freeQ,a=song?song.a:'';
   if(!apiKey){toast('⚙ 설정에서 API 키를 먼저 넣어 주세요');ui.modal='settings';render();return;}
-  cur={song:song,t:t,a:a,id:song&&song.ve||'',cands:[]};
+  cur={song:song,t:t,a:a,id:song&&song.ve2||'',cands:[]};
   openPlayer(t+(a?' - '+a:''));
   if(cur.id){playId(cur.id);return;}
   pmsg('<div style="font-size:1.2rem">앱 안에서 재생할 반주 영상을 찾고 있어요…</div>',true);
   var mine=cur;
   embedIds(t,a).then(function(ids){
     if(cur!==mine)return;
-    if(!ids.length){pmsg('<div>앱 안에서 재생할 수 있는 영상을 찾지 못했어요.</div><a class="btn yt" target="_blank" rel="noopener" href="'+ytSearchUrl(t,a)+'">유튜브에서 '+BRAND_LABEL[state.brand]+' 영상 보기</a>',true);return;}
+    if(!ids.length){pmsg('<div>앱 안에서 재생할 수 있는 <b>노래방 반주 영상</b>을 찾지 못했어요.<br>"▶ 부르기"로 태진·금영 영상을 이용해 주세요.</div><a class="btn yt" target="_blank" rel="noopener" href="'+ytSearchUrl(t,a)+'">유튜브에서 '+BRAND_LABEL[state.brand]+' 영상 보기</a>',true);return;}
     cur.id=ids[0];cur.cands=ids.slice(1,5);
-    if(song){song.ve=ids[0];save();}
+    if(song){song.ve2=ids[0];save();}
     playId(ids[0]);
   }).catch(function(err){if(cur!==mine)return;pmsg('<div>'+whyErr(err)+'</div><a class="btn yt" target="_blank" rel="noopener" href="'+ytSearchUrl(t,a)+'">유튜브에서 열기</a>',true);});
 }
