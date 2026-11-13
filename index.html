@@ -61,6 +61,20 @@ label{display:block;font-size:.9rem;color:var(--sub);margin:12px 0 4px}
 .sheet textarea{height:90px;font-size:.75rem}
 .help{font-size:.82rem;color:var(--sub);line-height:1.6;margin-top:6px}
 .row{display:flex;gap:8px;margin-top:16px}
+.zgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:6px}
+.zb{background:var(--card2);border:1px solid var(--line);border-radius:12px;padding:8px 2px;cursor:pointer;font-size:.85rem;color:var(--text)}
+.zb b{display:block;font-size:1.9rem;line-height:1.2}
+.pl{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.pl .chip{font-size:.95rem}
+.gbig{font-size:1.5rem;font-weight:800;text-align:center;margin:12px 0 6px}
+.gsong{text-align:center;background:var(--card2);border:1px solid var(--line);border-radius:16px;padding:18px 12px;margin:10px 0}
+.gsong .t{font-size:1.5rem}
+.gprog{text-align:center;color:var(--sub);font-size:.95rem}
+.ok{background:var(--green)!important;color:#08101f!important;border:none!important;font-weight:800;padding:16px 8px}
+.fail{background:#e5484d!important;color:#fff!important;border:none!important;font-weight:800;padding:16px 8px}
+.roul{font-size:1.6rem;font-weight:800;text-align:center;padding:24px 10px;border:3px dashed var(--gold);border-radius:20px;margin:14px 0;min-height:130px;display:flex;align-items:center;justify-content:center;word-break:keep-all}
+.gres{display:flex;align-items:center;gap:10px;background:var(--card2);border-radius:12px;padding:12px;margin-top:8px}
+.gres .nm{flex:1;font-weight:700;font-size:1.1rem}
 .q{display:flex;align-items:center;gap:10px;padding:12px 0;border-bottom:1px solid var(--line)}
 .q .n{color:var(--pink);font-weight:800;min-width:1.6em}
 .q .x{background:none;border:1px solid var(--line);border-radius:8px;padding:6px 10px;cursor:pointer;color:var(--sub)}
@@ -167,6 +181,7 @@ function render(){
   ['TJ','KY'].forEach(function(b){h+='<button class="chip'+(state.brand===b?' on':'')+'" data-brand="'+b+'">'+BRAND_LABEL[b]+'</button>';});
   h+='</div><div class="search"><input id="q" type="search" placeholder="🔍 노래 제목, 가수, 번호 검색" value="'+esc(ui.q)+'" autocomplete="off"></div>';
   h+='<div class="hint">초성 검색도 돼요: 예) ㄴㅎㅇㅊ → 남행열차, ㄴㅎㅇ → 나훈아</div><div class="cats">';
+  h+='<button class="chip" style="border-color:var(--gold);color:var(--gold)" data-act="game">🎲 노래게임</button>';
   ['전체','⭐ 즐겨찾기','🏆 인기차트','🎶 메들리'].concat(CATS).forEach(function(c){h+='<button class="chip'+(ui.cat===c?' on':'')+'" data-cat="'+esc(c)+'">'+esc(c)+'</button>';});
   h+='</div><div id="lw">'+listHTML()+'</div></div>';
   var first=queue.length?byId(queue[0]):null;
@@ -177,7 +192,9 @@ function render(){
   if(ui.modal==='form')h+=formModal();
   if(ui.modal==='settings')h+=settingsModal();
   if(ui.modal==='recs')h+=recsModal();
+  if(ui.modal==='game')h+=gameModal();
   root.innerHTML=h;
+  if(ui.modal==='game'&&G.phase==='pen'&&!G.spun)spin();
 }
 function refreshList(){var lw=document.getElementById('lw');if(lw)lw.innerHTML=listHTML();}
 function queueModal(){
@@ -247,6 +264,79 @@ function medleyHTML(){
     h+='<a class="song" style="display:flex;gap:12px;align-items:center;text-decoration:none;color:inherit" target="_blank" rel="noopener" href="https://www.youtube.com/watch?v='+esc(m.id)+'">'+(m.img?'<img src="'+esc(m.img)+'" alt="" style="width:120px;height:68px;object-fit:cover;border-radius:10px;flex:none">':'')+'<div class="info"><div class="t" style="font-size:1.05rem">'+esc(m.t)+'</div><div class="a">▶ 유튜브에서 메들리 부르기</div></div></a>';});
   h+='<div class="help" style="text-align:center;margin-top:14px"><button class="chip" data-act="medreload">🔄 목록 새로 불러오기</button></div>';
   return h;
+}
+/* ---------- 노래 도전 게임 ---------- */
+var ZOD=[['🐭','쥐'],['🐮','소'],['🐯','호랑이'],['🐰','토끼'],['🐲','용'],['🐍','뱀'],['🐴','말'],['🐑','양'],['🐵','원숭이'],['🐔','닭'],['🐶','개'],['🐷','돼지']];
+var NUMS='①②③④⑤⑥⑦⑧⑨';
+var PEN_DEF=['🐾 내 띠 동물 흉내 내기','💕 애교 한 번','🍑 엉덩이로 이름 쓰기','🎤 다음 곡도 내가 부르기','💆 옆 사람 어깨 안마 1분','😂 3초 동안 웃긴 표정','🕺 10초 막춤','🙏 가족에게 칭찬 한마디','🎵 아는 동요 한 소절 부르기','🍽 설거지 당번','🤫 다음 차례까지 말 안 하기','🍀 통과! (벌칙 면제)'];
+var PEN=PEN_DEF;try{var pv=JSON.parse(ls('k2_pen')||'null');if(pv&&pv.length)PEN=pv;}catch(e){}
+function newGame(keep){return {phase:'setup',n:keep?keep.n:10,pool:keep?keep.pool:'전체',players:keep?keep.players:[],songs:[],spare:[],i:0,res:[],pass:{},pen:'',spun:false,editPen:false};}
+var G=null;try{G=JSON.parse(ls('k2_game')||'null');}catch(e){}
+if(!G||!G.phase)G=newGame();
+function gSave(){ls('k2_game',JSON.stringify(G));}
+function pName(k){var z=G.players[k],same=0,idx=0;G.players.forEach(function(p,j){if(p===z){same++;if(j<k)idx++;}});return ZOD[z][0]+' '+ZOD[z][1]+'띠'+(same>1?NUMS[idx]||'':'');}
+function gPool(p){if(p==='⭐ 즐겨찾기')return state.songs.filter(function(s){return s.f;});
+  if(p==='🏆 인기차트')return CHART.ids.map(byId).filter(Boolean);
+  if(p==='전체')return state.songs.slice();return state.songs.filter(function(s){return s.c===p;});}
+function shuffle(a){for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1)),x=a[i];a[i]=a[j];a[j]=x;}return a;}
+function gSync(){var a=document.getElementById('g_n');if(a)G.n=Math.max(1,Math.min(50,parseInt(a.value,10)||10));
+  var b=document.getElementById('g_pool');if(b)G.pool=b.value;
+  var c=document.getElementById('g_pen');if(c){var L=c.value.split('\n').map(function(x){return x.trim();}).filter(Boolean);PEN=L.length?L:PEN_DEF;ls('k2_pen',JSON.stringify(PEN));}}
+function gCur(){return G.players.length?G.i%G.players.length:0;}
+function gStart(){
+  if(!G.players.length){toast('먼저 띠를 눌러 참가자를 정해 주세요');return;}
+  var ids=shuffle(gPool(G.pool).map(function(s){return s.id;}));
+  if(!ids.length){toast('그 분류에는 노래가 없어요');return;}
+  if(ids.length<G.n){toast(G.pool+'에 노래가 '+ids.length+'곡뿐이라 '+ids.length+'곡으로 해요');G.n=ids.length;}
+  G.songs=ids.slice(0,G.n);G.spare=ids.slice(G.n);G.i=0;G.res=[];G.pass={};G.phase='play';G.editPen=false;gSave();render();}
+function gResult(ok){G.res.push({p:gCur(),id:G.songs[G.i],ok:ok});
+  if(!ok){G.pen=PEN[Math.floor(Math.random()*PEN.length)];G.spun=false;G.phase='pen';gSave();render();return;}
+  toast('👏 성공!');gNext();}
+function gNext(){G.i++;G.phase=G.i>=G.songs.length?'end':'play';gSave();render();}
+function penText(t,k){return t.replace('내 띠 동물',ZOD[G.players[k]][1]);}
+function spin(){var el=document.getElementById('roul'),nx=document.getElementById('g_next');if(!el)return;
+  var k=G.res.length?G.res[G.res.length-1].p:0,n=0,tot=18;
+  (function tick(){if(!document.getElementById('roul'))return;
+    if(n<tot){el.textContent=penText(PEN[Math.floor(Math.random()*PEN.length)],k);n++;setTimeout(tick,60+n*n*1.2);}
+    else{el.textContent=penText(G.pen,k);el.style.borderStyle='solid';G.spun=true;gSave();if(nx)nx.style.visibility='visible';}})();}
+function gameModal(){
+  var h='<div class="modal"><div class="sheet"><h2>🎲 노래 도전 게임</h2>';
+  if(G.phase==='setup'){
+    var opts=['전체','⭐ 즐겨찾기','🏆 인기차트'].concat(CATS);
+    h+='<label>① 몇 곡 할까요?</label><input id="g_n" type="number" inputmode="numeric" min="1" max="50" value="'+G.n+'">';
+    h+='<label>② 어디서 뽑을까요?</label><select id="g_pool">'+opts.map(function(o){return '<option value="'+esc(o)+'"'+(G.pool===o?' selected':'')+'>'+esc(o)+' ('+gPool(o).length+'곡)</option>';}).join('')+'</select>';
+    h+='<label>③ 누가 할까요? 자기 띠를 눌러 주세요</label><div class="zgrid">';
+    ZOD.forEach(function(z,i){h+='<button class="zb" data-zod="'+i+'"><b>'+z[0]+'</b>'+z[1]+'</button>';});
+    h+='</div><div class="help">같은 띠가 둘이면 한 번 더 누르세요. 이름을 누르면 빠져요.</div><div class="pl">';
+    if(!G.players.length)h+='<span class="help">아직 참가자가 없어요</span>';
+    G.players.forEach(function(p,k){h+='<button class="chip on" data-gdel="'+k+'">'+(k+1)+'. '+esc(pName(k))+' ✕</button>';});
+    h+='</div><div class="help" style="margin-top:12px">순서대로 한 곡씩 나와요. 못 부르면 ❌ 실패 → 🎡 벌칙 룰렛! 사람마다 🙋 패스 찬스가 1번 있어요.</div>';
+    if(G.editPen)h+='<label>벌칙 목록 (한 줄에 하나씩)</label><textarea id="g_pen" style="min-height:220px">'+esc(PEN.join('\n'))+'</textarea><div class="row"><button class="btn" data-act="gpendef">기본 목록으로</button><button class="btn" data-act="gpensave">벌칙 저장</button></div>';
+    else h+='<div class="row"><button class="btn" data-act="gpenedit">✎ 벌칙 고치기 ('+PEN.length+'개)</button></div>';
+    h+='<div class="row"><button class="btn" data-act="close">닫기</button><button class="btn play" data-act="gstart">🎲 게임 시작</button></div>';
+  } else if(G.phase==='play'){
+    var s=byId(G.songs[G.i]),k=gCur();
+    if(!s){G.songs.splice(G.i,1);if(G.i>=G.songs.length){G.phase='end';}gSave();return gameModal();}
+    h+='<div class="gprog">'+(G.i+1)+' / '+G.songs.length+' 번째 곡 · '+esc(G.pool)+'</div><div class="gbig">'+esc(pName(k))+' 차례!</div>';
+    h+='<div class="gsong"><div class="t">🎵 '+esc(s.t)+'</div><div class="a" style="font-size:1.05rem;margin-top:6px">'+esc(s.a)+(s.tj?' · TJ '+esc(s.tj):'')+'</div></div>';
+    h+='<div class="acts"><button class="btn play" data-play="'+s.id+'">▶ 부르기</button><button class="btn inapp" data-app="'+s.id+'">📺 앱에서</button></div>';
+    h+='<div class="row"><button class="btn fail" data-act="gfail">❌ 실패</button><button class="btn ok" data-act="gok">⭕ 성공</button></div>';
+    h+='<div class="row">'+(!G.pass[k]&&G.spare.length?'<button class="btn" data-act="gpass">🙋 패스 (다른 곡으로, 1번만)</button>':'<button class="btn" style="opacity:.4;pointer-events:none">🙋 패스 다 썼어요</button>')+'<button class="btn small" data-act="gquit">그만하기</button></div>';
+  } else if(G.phase==='pen'){
+    var pk=G.res.length?G.res[G.res.length-1].p:0;
+    h+='<div class="gbig">❌ '+esc(pName(pk))+' 벌칙!</div><div class="roul" id="roul">'+(G.spun?esc(penText(G.pen,pk)):'🎡')+'</div>';
+    h+='<div class="row"><button class="btn play" id="g_next" data-act="gnext" style="visibility:'+(G.spun?'visible':'hidden')+'">'+(G.i+1>=G.songs.length?'🏆 결과 보기':'다음 곡 ▶')+'</button></div>';
+  } else {
+    var st=G.players.map(function(p,k){return {k:k,ok:0,no:0};});
+    G.res.forEach(function(r){if(st[r.p]){if(r.ok)st[r.p].ok++;else st[r.p].no++;}});
+    var best=0;st.forEach(function(x){if(x.ok>best)best=x.ok;});
+    var kings=st.filter(function(x){return best>0&&x.ok===best;}).map(function(x){return pName(x.k);});
+    h+='<div class="gbig">'+(kings.length?'🏆 노래왕: '+esc(kings.join(', ')):'🎤 수고했어요!')+'</div>';
+    st.slice().sort(function(a,b){return b.ok-a.ok||a.no-b.no;}).forEach(function(x){
+      h+='<div class="gres"><div class="nm">'+(best>0&&x.ok===best?'👑 ':'')+esc(pName(x.k))+'</div><div>⭕ '+x.ok+'곡</div><div>❌ 벌칙 '+x.no+'번</div></div>';});
+    h+='<div class="row"><button class="btn" data-act="gsetup">처음 화면</button><button class="btn play" data-act="gagain">🔁 같은 사람끼리 또 하기</button></div>';
+  }
+  return h+'</div></div>';
 }
 /* ---------- player ---------- */
 var P=document.getElementById('player'),yt=null,ytReady=false,ytWait=[],cur=null;
@@ -373,10 +463,12 @@ function fillRecs(){
 }
 /* ---------- events ---------- */
 root.addEventListener('click',function(e){
-  var el=e.target.closest('[data-brand],[data-cat],[data-fav],[data-rsv],[data-edit],[data-act],[data-rm],[data-up],[data-play],[data-app],[data-recdel]');
+  var el=e.target.closest('[data-brand],[data-cat],[data-fav],[data-rsv],[data-edit],[data-act],[data-rm],[data-up],[data-play],[data-app],[data-recdel],[data-zod],[data-gdel]');
   if(!el)return;var d=el.dataset;
   if(d.act==='close'&&el.classList.contains('modal')&&e.target!==el)return;
   if(d.recdel){if(el.dataset.sure){dbDel(+d.recdel).then(fillRecs);toast('녹음을 삭제했어요');}else{el.dataset.sure='1';el.textContent='정말 삭제?';}return;}
+  if(d.zod!==undefined){gSync();if(G.players.length>=20){toast('참가자는 20명까지예요');return;}G.players.push(+d.zod);gSave();render();return;}
+  if(d.gdel!==undefined){gSync();G.players.splice(+d.gdel,1);gSave();render();return;}
   if(d.play){var s=byId(d.play);if(s)play(s);return;}
   if(d.app){var sa=byId(d.app);if(sa)playApp(sa);return;}
   if(d.brand){state.brand=d.brand;ls('k2_brand',d.brand);render();return;}
@@ -404,6 +496,18 @@ root.addEventListener('click',function(e){
       state.songs=state.songs.filter(function(s){return s.id!==ui.edit;});state.deleted.push(ui.edit);
       queue=queue.filter(function(id){return id!==ui.edit;});saveQueue();ui.modal=null;ui.edit=null;toast('삭제했어요');save();render();break;
     case 'next':playNext();break;
+    case 'game':ui.modal='game';render();break;
+    case 'gstart':gSync();gStart();break;
+    case 'gpenedit':gSync();G.editPen=true;gSave();render();break;
+    case 'gpensave':gSync();G.editPen=false;gSave();toast('벌칙을 저장했어요');render();break;
+    case 'gpendef':PEN=PEN_DEF;ls('k2_pen',JSON.stringify(PEN));G.editPen=false;gSave();toast('기본 벌칙으로 돌렸어요');render();break;
+    case 'gok':gResult(true);break;
+    case 'gfail':gResult(false);break;
+    case 'gnext':gNext();break;
+    case 'gpass':var gk=gCur();if(!G.pass[gk]&&G.spare.length){G.pass[gk]=1;G.songs[G.i]=G.spare.shift();gSave();toast('🙋 패스! 다른 곡이에요');render();}break;
+    case 'gquit':if(!el.dataset.sure){el.dataset.sure='1';el.textContent='정말?';break;}G.songs=G.songs.slice(0,G.i);G.phase='end';gSave();render();break;
+    case 'gagain':G=newGame(G);gSave();gStart();break;
+    case 'gsetup':G=newGame(G);gSave();render();break;
   }
 });
 var qt=null;
